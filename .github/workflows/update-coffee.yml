@@ -1,0 +1,264 @@
+# ========================================
+# WORKFLOW: Coffee Counter Auto-Update
+# ========================================
+#
+# Este workflow automatiza a atualização do contador de café
+# Perfeito para aprender GitHub Actions na prática!
+#
+# O que este workflow faz:
+# 1. Roda automaticamente em horários agendados
+# 2. Incrementa o contador no arquivo counter.txt
+# 3. Atualiza o README.md com o novo valor
+# 4. Faz commit e push automático das mudanças
+#
+# Aprenda mais em: https://docs.github.com/actions
+
+# Nome do workflow (aparece na aba Actions do GitHub)
+name: "☕ Coffee Counter - Auto Update"
+
+# ========================================
+# QUANDO ESTE WORKFLOW DEVE EXECUTAR
+# ========================================
+on:
+  # 1. SCHEDULE - Executa automaticamente em horários programados
+  #    Sintaxe: cron usa o formato "minuto hora dia mês dia-da-semana"
+  #    Timezone: UTC (sempre)
+  schedule:
+    # Todo dia 1 de cada mês às 09:00 UTC (06:00 Brasília)
+    - cron: '0 9 1 * *'
+
+    # Todo dia 10 de cada mês às 09:00 UTC (06:00 Brasília)
+    - cron: '0 9 10 * *'
+
+    # Todo dia 20 de cada mês às 09:00 UTC (06:00 Brasília)
+    - cron: '0 9 20 * *'
+
+  # 2. WORKFLOW_DISPATCH - Permite executar manualmente
+  #    Útil para: Testar o workflow sem esperar o schedule
+  #    Como usar: Vá em Actions > Coffee Counter > Run workflow
+  workflow_dispatch:
+
+  # 3. PUSH - (Opcional) Executa quando fizer push na main
+  #    Descomente as linhas abaixo se quiser que rode a cada push:
+  # push:
+  #   branches:
+  #     - main
+
+# ========================================
+# PERMISSÕES NECESSÁRIAS
+# ========================================
+# Define o que o workflow pode fazer no repositório
+permissions:
+  contents: write  # Permite fazer commits e push
+
+# ========================================
+# JOBS (TRABALHOS)
+# ========================================
+# Um workflow pode ter vários jobs que rodam em paralelo ou sequencialmente
+jobs:
+
+  # Job: update-counter
+  # Este é o único job deste workflow
+  update-counter:
+
+    # Tipo de máquina virtual onde o job vai rodar
+    # ubuntu-latest: Ubuntu Linux mais recente (gratuito para repos públicos)
+    runs-on: ubuntu-latest
+
+    # ========================================
+    # STEPS (PASSOS)
+    # ========================================
+    # Cada job é composto de vários steps que executam sequencialmente
+    steps:
+
+      # ─────────────────────────────────────
+      # STEP 1: Checkout do código
+      # ─────────────────────────────────────
+      # Baixa o código do repositório para a máquina virtual
+      # Sem isso, a VM estaria vazia!
+      - name: "📥 Checkout do repositório"
+        uses: actions/checkout@v4
+        with:
+          # Importante: busca o histórico completo para poder fazer commit
+          fetch-depth: 0
+
+      # ─────────────────────────────────────
+      # STEP 2: Incrementar o contador
+      # ─────────────────────────────────────
+      # Executa um script bash que:
+      # - Lê o valor atual de counter.txt
+      # - Incrementa em 1
+      # - Salva o novo valor
+      # - Atualiza o README.md
+      - name: "☕ Incrementar contador de café"
+        run: |
+          # Define o arquivo do contador
+          FILE=counter.txt
+
+          # Se o arquivo não existir, cria com valor 0
+          if [ ! -f $FILE ]; then
+            echo "📝 Criando $FILE pela primeira vez..."
+            echo 0 > $FILE
+          fi
+
+          # Lê o valor atual
+          COUNT=$(cat $FILE)
+          echo "📊 Contador atual: $COUNT"
+
+          # Incrementa o contador
+          COUNT=$((COUNT + 1))
+          echo "✨ Novo contador: $COUNT"
+
+          # Salva o novo valor
+          echo $COUNT > $FILE
+
+          # Atualiza o README.md com o novo valor
+          echo "📝 Atualizando README.md..."
+          cat > README.md << EOF
+          # ☕ Coffee Counter
+
+          ![Coffee](https://img.shields.io/badge/Caf%C3%A9s%20Consumidos-$COUNT-brown?style=for-the-badge&logo=buy-me-a-coffee)
+          ![GitHub Actions](https://img.shields.io/badge/GitHub-Actions-blue?style=for-the-badge&logo=github-actions)
+          ![Auto Update](https://img.shields.io/badge/Auto-Update-success?style=for-the-badge&logo=clockify)
+
+          ## 📊 Contador Atual
+
+          **Total de cafés consumidos:** \`$COUNT\` ☕
+
+          > *Mais café = mais energia!* ⚡
+
+          ---
+
+          ## 🎯 Sobre este projeto
+
+          Este é um projeto didático para aprender **GitHub Actions** na prática!
+
+          ### Como funciona?
+
+          1. 📅 O GitHub Actions roda automaticamente nos dias 1, 10 e 20 de cada mês
+          2. 🤖 Um script incrementa automaticamente o contador
+          3. 📝 O arquivo \`counter.txt\` e este README são atualizados
+          4. 💾 Um commit automático é feito
+          5. 🚀 As mudanças são enviadas para o repositório
+
+          ### Estrutura do projeto
+
+          \`\`\`
+          coffee-counter/
+          ├── index.html              # Página web do contador
+          ├── script.js               # Lógica do contador
+          ├── counter.txt             # Armazena o número atual
+          ├── README.md               # Este arquivo
+          └── .github/
+              └── workflows/
+                  └── update-coffee.yml   # Workflow do GitHub Actions
+          \`\`\`
+
+          ### Como testar localmente
+
+          \`\`\`bash
+          # Clone o repositório
+          git clone [seu-repositorio]
+
+          # Entre na pasta
+          cd coffee-counter
+
+          # Inicie um servidor local
+          python3 -m http.server 8000
+          # ou use a extensão Live Server do VS Code
+
+          # Abra no navegador
+          # http://localhost:8000
+          \`\`\`
+
+          ### Como configurar no seu GitHub
+
+          1. 📁 Crie um repositório novo
+          2. 📤 Faça push deste código
+          3. ⚙️ Vá em Settings > Pages
+          4. 🌐 Ative GitHub Pages apontando para branch main, pasta raiz
+          5. 🎉 Pronto! Seu Coffee Counter está no ar!
+
+          ### Testando o workflow manualmente
+
+          1. Vá na aba **Actions** do seu repositório
+          2. Clique no workflow "Coffee Counter - Auto Update"
+          3. Clique em **Run workflow**
+          4. Aguarde alguns segundos
+          5. Veja o commit automático aparecer!
+
+          ---
+
+          ## 📚 Aprenda mais
+
+          - [GitHub Actions Documentation](https://docs.github.com/actions)
+          - [GitHub Pages](https://pages.github.com/)
+          - [Cron Schedule Examples](https://crontab.guru/)
+
+          ---
+
+          *Última atualização automática: $(date -u +'%Y-%m-%d %H:%M:%S UTC')*
+
+          **Feito com ☕ e 💻**
+          EOF
+
+          echo "✅ README.md atualizado!"
+
+      # ─────────────────────────────────────
+      # STEP 3: Configurar Git
+      # ─────────────────────────────────────
+      # Configura o nome e email para os commits do bot
+      - name: "🔧 Configurar Git"
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+
+      # ─────────────────────────────────────
+      # STEP 4: Commit e Push
+      # ─────────────────────────────────────
+      # Faz commit das mudanças e envia para o repositório
+      - name: "💾 Commit e Push das alterações"
+        run: |
+          # Captura o novo valor do contador para usar na mensagem de commit
+          NEW_COUNT=$(cat counter.txt)
+
+          # Adiciona os arquivos modificados
+          git add counter.txt README.md
+
+          # Verifica se há mudanças para commitar
+          # (Evita erro se o workflow rodar mas nada mudou)
+          if git diff --staged --quiet; then
+            echo "ℹ️ Nenhuma mudança para commitar"
+          else
+            # Faz o commit
+            git commit -m "☕ Auto-update: $NEW_COUNT cafés consumidos
+
+          🤖 Atualização automática via GitHub Actions
+          📅 $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+
+            # Faz push para o repositório
+            git push
+
+            echo "✅ Commit realizado e push feito com sucesso!"
+          fi
+
+# ========================================
+# DICAS PARA PERSONALIZAR
+# ========================================
+#
+# 🕐 Mudar horários do schedule:
+#    Use https://crontab.guru/ para gerar a expressão cron
+#    Exemplo: '0 12 * * 1' = Toda segunda-feira ao meio-dia UTC
+#
+# 📊 Adicionar mais steps:
+#    Você pode adicionar steps para enviar notificações,
+#    fazer deploy, rodar testes, etc.
+#
+# 🔐 Usar secrets:
+#    Para APIs e tokens: ${{ secrets.SEU_SECRET }}
+#    Configure em: Settings > Secrets and variables > Actions
+#
+# 📦 Usar outras actions:
+#    Visite: https://github.com/marketplace?type=actions
+#
+# ========================================
